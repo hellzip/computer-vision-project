@@ -77,6 +77,16 @@ with st.sidebar:
         st.session_state.canvas_key += 1
 
 if st.session_state.get("active") and st.session_state.get("target"):
+    if st.session_state.get("win_time") is not None:
+        win_elapsed = time.time() - st.session_state.get("win_time")
+        if win_elapsed >= 5:
+            st.session_state.target = random.choice(predictor.class_names)
+            st.session_state.start_time = time.time()
+            st.session_state.attempts = 0
+            st.session_state.canvas_key += 1
+            st.session_state.last_pred = None
+            st.session_state.win_time = None
+    
     col1, col2 = st.columns([1.2, 1])
     
     with col1:
@@ -98,7 +108,14 @@ if st.session_state.get("active") and st.session_state.get("target"):
         st.subheader("Predictions")
         
         elapsed = time.time() - st.session_state.get("start_time", time.time()) if st.session_state.get("start_time") else 0
-        st.metric("Time", f"{elapsed:.1f}s")
+        time_remaining = max(0, 20 - elapsed)
+        
+        if time_remaining <= 5:
+            st.metric("⏱ Time Remaining", f"{time_remaining:.1f}s", delta=None, 
+                      help="Time left in this round", label_visibility="visible")
+        else:
+            st.metric("Time Remaining", f"{time_remaining:.1f}s")
+        
         st.metric("Attempts", st.session_state.get("attempts", 0))
         
         st.write("**Top Guesses:**")
@@ -106,14 +123,12 @@ if st.session_state.get("active") and st.session_state.get("target"):
         if canvas is not None and canvas.image_data is not None:
             rgba = canvas.image_data.astype(np.uint8)
             gray = cv2.cvtColor(rgba, cv2.COLOR_RGBA2GRAY)
-            img = gray  # Keep black strokes on white, consistent with training
+            img = gray 
 
-            # Skip prediction if canvas is effectively empty
             if np.count_nonzero(img < 200) < 10:
                 st.info("Draw a bit more for a confident prediction.")
                 preds = []
             else:
-                # Let errors bubble up to see the full traceback
                 preds = predictor.predict_topk(img, k=3)
 
             if preds:
@@ -136,7 +151,6 @@ if st.session_state.get("active") and st.session_state.get("target"):
                 if st.session_state.get("win_time") is None:
                     st.session_state.win_time = time.time()
                 st.success(f"Correct! It's a {top_label}!")
-                # Auto-change target after 5 seconds
                 if time.time() - st.session_state.get("win_time", time.time()) >= 5:
                     st.session_state.target = random.choice(predictor.class_names)
                     st.session_state.start_time = time.time()
