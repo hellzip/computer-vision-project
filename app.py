@@ -104,7 +104,11 @@ if st.session_state.get("active") and st.session_state.get("target"):
             gray = cv2.cvtColor(rgba, cv2.COLOR_RGBA2GRAY)
             img = 255 - gray
             
-            preds = predictor.predict_topk(img, k=3)
+            try:
+                preds = predictor.predict_topk(img, k=3)
+            except Exception as e:
+                st.error(f"Prediction failed: {str(e)}")
+                preds = []
             top_label, top_conf = preds[0]
             
             last_pred = st.session_state.get("last_pred")

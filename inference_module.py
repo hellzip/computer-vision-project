@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import joblib
 import json
+import warnings
 
 IMG_SIZE = 224
 
@@ -159,9 +160,31 @@ class DrawPredictor:
         self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
         self.model.eval()
 
+    def _align_features_dim(self, features: np.ndarray) -> np.ndarray:
+        target_dim = getattr(self.model.fc1, "in_features", features.shape[1])
+        current_dim = features.shape[1]
+        if current_dim == target_dim:
+            return features
+        if current_dim > target_dim:
+            return features[:, :target_dim]
+        pad = target_dim - current_dim
+        return np.concatenate([features, np.zeros((features.shape[0], pad), dtype=features.dtype)], axis=1)
+
     def _predict_features(self, features):
         features = features.reshape(1, -1)
-        features_norm = self.scaler.transform(features)
+        features = self._align_features_dim(features)
+        try:
+            scaler_dim = getattr(self.scaler, "n_features_in_", None)
+            if scaler_dim is not None and scaler_dim == features.shape[1]:
+                features_norm = self.scaler.transform(features)
+            else:
+                warnings.warn(
+                    f"Scaler feature mismatch (scaler={scaler_dim}, features={features.shape[1]}). "
+                    "Proceeding without scaling.")
+                features_norm = features
+        except Exception as e:
+            warnings.warn(f"Feature scaling failed: {e}. Proceeding without scaling.")
+            features_norm = features
         tensor_in = torch.tensor(features_norm, dtype=torch.float32)
         with torch.no_grad():
             logits = self.model(tensor_in)
