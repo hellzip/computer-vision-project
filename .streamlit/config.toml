@@ -11,9 +11,6 @@ toolbarMode = "minimal"
 
 [server]
 headless = true
-port = 8080
-maxUploadSize = 200
-enableXsrfProtection = true
 enableCORS = false
 
 [logger]
