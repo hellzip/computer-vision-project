@@ -1,1 +1,7 @@
-pywin32==308
+streamlit>=1.28
+streamlit-drawable-canvas>=0.9.3
+numpy>=1.21
+opencv-python-headless>=4.8
+torch>=2.1
+joblib>=1.3
+scikit-learn>=1.0
