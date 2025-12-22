@@ -1,0 +1,42 @@
+# .gitignore for QuickDraw project
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data
+quickdraw_images_dedup/
+*.npy
+temp.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Large files (if not using Git LFS)
+# quickdraw_mlp.pth
+# scaler.pkl
+
+# pytest
+.pytest_cache/
