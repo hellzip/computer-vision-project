@@ -34,9 +34,5 @@ Thumbs.db
 # Streamlit
 .streamlit/secrets.toml
 
-# Large files (if not using Git LFS)
-# quickdraw_mlp.pth
-# scaler.pkl
-
 # pytest
 .pytest_cache/
