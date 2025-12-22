@@ -45,6 +45,8 @@ if "canvas_key" not in st.session_state:
     st.session_state.canvas_key = 0
 if "last_pred" not in st.session_state:
     st.session_state.last_pred = None
+if "win_time" not in st.session_state:
+    st.session_state.win_time = None
 
 st.title("Live Sketch")
 st.caption("Draw an object and let the AI guess what you're drawing!")
@@ -59,6 +61,7 @@ with st.sidebar:
         st.session_state.attempts = 0
         st.session_state.canvas_key += 1
         st.session_state.last_pred = None
+        st.session_state.win_time = None
     
     target = st.selectbox("Or pick a class:", predictor.class_names)
     if st.button("Start Game", use_container_width=True):
@@ -68,6 +71,7 @@ with st.sidebar:
         st.session_state.attempts = 0
         st.session_state.canvas_key += 1
         st.session_state.last_pred = None
+        st.session_state.win_time = None
     
     if st.button("Clear Canvas", use_container_width=True):
         st.session_state.canvas_key += 1
@@ -102,18 +106,20 @@ if st.session_state.get("active") and st.session_state.get("target"):
         if canvas is not None and canvas.image_data is not None:
             rgba = canvas.image_data.astype(np.uint8)
             gray = cv2.cvtColor(rgba, cv2.COLOR_RGBA2GRAY)
-            img = 255 - gray
-            
-            try:
-                preds = predictor.predict_topk(img, k=3)
-            except Exception as e:
-                st.error(f"Prediction failed: {str(e)}")
+            img = gray  # Keep black strokes on white, consistent with training
+
+            # Skip prediction if canvas is effectively empty
+            if np.count_nonzero(img < 200) < 10:
+                st.info("Draw a bit more for a confident prediction.")
                 preds = []
+            else:
+                # Let errors bubble up to see the full traceback
+                preds = predictor.predict_topk(img, k=3)
 
             if preds:
                 top_label, top_conf = preds[0]
             else:
-                st.info("No predictions available due to a model/scaler mismatch.")
+                st.info("No predictions available yet.")
                 top_label, top_conf = None, None
             
             last_pred = st.session_state.get("last_pred")
@@ -127,8 +133,12 @@ if st.session_state.get("active") and st.session_state.get("target"):
                 st.markdown(f"<div class='guess-box {style}'>{label}: {conf*100:.1f}%</div>", unsafe_allow_html=True)
             
             if top_label is not None and top_label == st.session_state.get("target"):
+                if st.session_state.get("win_time") is None:
+                    st.session_state.win_time = time.time()
                 st.success(f"Correct! It's a {top_label}!")
-                st.session_state.active = False
+                # Auto-end after 5 seconds
+                if time.time() - st.session_state.get("win_time", time.time()) >= 5:
+                    st.session_state.active = False
         else:
             st.info("Start drawing...")
 

@@ -32,6 +32,8 @@ for category in CLASSES:
     
     for i in range(min(1000, len(data))):
         img_array = data[i].reshape(28, 28)
+        # Invert: QuickDraw has white strokes on black, we need black on white
+        img_array = 255 - img_array
         img = Image.fromarray(img_array)
         img.save(os.path.join(class_dir, f"{i}.png"))
     

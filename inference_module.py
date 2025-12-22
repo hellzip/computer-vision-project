@@ -11,24 +11,32 @@ IMG_SIZE = 224
 
 def preprocess_image(img, size=IMG_SIZE, augment=False):
     if img is None:
-        return np.zeros((size, size), dtype=np.uint8)
+        return np.full((size, size), 255, dtype=np.uint8)
     img = np.asarray(img, dtype=np.uint8)
-    img = cv2.resize(img, (size, size), interpolation=cv2.INTER_AREA)
-    img = cv2.GaussianBlur(img, (3, 3), 0)
-    img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
-    ys, xs = np.where(img > 15)
-    if len(xs) > 0 and len(ys) > 0:
-        x_min, x_max = xs.min(), xs.max()
-        y_min, y_max = ys.min(), ys.max()
-        cropped = img[y_min:y_max+1, x_min:x_max+1]
-        h, w = cropped.shape
-        pad = max(h, w)
-        canvas = np.zeros((pad, pad), dtype=np.uint8)
-        y_off = (pad - h) // 2
-        x_off = (pad - w) // 2
-        canvas[y_off:y_off+h, x_off:x_off+w] = cropped
-        img = cv2.resize(canvas, (size, size), interpolation=cv2.INTER_AREA)
-    return img
+
+    ys, xs = np.where(img < 200)
+    if len(xs) == 0:
+        return np.full((size, size), 255, dtype=np.uint8)
+
+    x_min, x_max = xs.min(), xs.max()
+    y_min, y_max = ys.min(), ys.max()
+    cropped = img[y_min:y_max+1, x_min:x_max+1]
+
+    h, w = cropped.shape
+    scale = size / max(h, w)
+    new_h = int(h * scale)
+    new_w = int(w * scale)
+    resized = cv2.resize(cropped, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+    canvas = np.full((size, size), 255, dtype=np.uint8)
+    y_off = (size - new_h) // 2
+    x_off = (size - new_w) // 2
+    canvas[y_off:y_off+new_h, x_off:x_off+new_w] = resized
+
+    canvas = cv2.GaussianBlur(canvas, (3, 3), 0)
+    canvas = cv2.normalize(canvas, None, 0, 255, cv2.NORM_MINMAX)
+
+    return canvas
 
 def gradient_orientation_histogram(img, num_bins=9):
     gx = cv2.Sobel(img, cv2.CV_32F, 1, 0, ksize=3)
@@ -112,21 +120,36 @@ def shape_ratio_features(img):
 
 def extract_features_manual(img):
     feats = []
+
     feats.append(gradient_orientation_histogram(img))
-    h, w = img.shape
-    h2, w2 = h // 2, w // 2
-    for y in [0, h2]:
-        for x in [0, w2]:
-            feats.append(gradient_orientation_histogram(img[y:y+h2, x:x+w2]))
+
+    def spatial_orientation(img_in, grid):
+        h, w = img_in.shape
+        cell_h = h // grid
+        cell_w = w // grid
+        local = []
+        for i in range(grid):
+            for j in range(grid):
+                patch = img_in[i*cell_h:(i+1)*cell_h, j*cell_w:(j+1)*cell_w]
+                local.append(gradient_orientation_histogram(patch))
+        return np.concatenate(local)
+
+    feats.append(spatial_orientation(img, grid=2))
+    feats.append(spatial_orientation(img, grid=4))
+
     feats.append(grid_density(img, grid=5))
     feats.append(grid_density(img, grid=7))
+
     feats.append(gradient_magnitude_stats(img))
+
     feats.append(ink_ratio_feature(img))
     feats.append(hv_stroke_ratio(img))
     feats.append(quadrant_density(img))
     feats.append(edge_density_feature(img))
+
     feats.append(normalized_moment_features(img))
     feats.append(shape_ratio_features(img))
+
     return np.concatenate(feats)
 
 class MLPClassifier(nn.Module):
