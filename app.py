@@ -136,9 +136,15 @@ if st.session_state.get("active") and st.session_state.get("target"):
                 if st.session_state.get("win_time") is None:
                     st.session_state.win_time = time.time()
                 st.success(f"Correct! It's a {top_label}!")
-                # Auto-end after 5 seconds
+                # Auto-change target after 5 seconds
                 if time.time() - st.session_state.get("win_time", time.time()) >= 5:
-                    st.session_state.active = False
+                    st.session_state.target = random.choice(predictor.class_names)
+                    st.session_state.start_time = time.time()
+                    st.session_state.attempts = 0
+                    st.session_state.canvas_key += 1
+                    st.session_state.last_pred = None
+                    st.session_state.win_time = None
+                    st.rerun()
         else:
             st.info("Start drawing...")
 
