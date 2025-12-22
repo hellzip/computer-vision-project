@@ -27,7 +27,11 @@ st.markdown("""
 def load_predictor():
     return DrawPredictor()
 
-predictor = load_predictor()
+try:
+    predictor = load_predictor()
+except Exception as e:
+    st.error(f"Failed to load model: {str(e)}")
+    st.stop()
 
 if "target" not in st.session_state:
     st.session_state.target = None
