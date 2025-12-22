@@ -2,44 +2,24 @@ import streamlit as st
 
 st.set_page_config(page_title="QuickDraw Test", layout="wide")
 
-st.title("QuickDraw App - Deployment Test")
-st.success("App is running successfully!")
-
-st.write("If you see this, the basic Streamlit deployment works.")
-st.write("Now we can debug the model loading issue.")
+st.title("Testing Model Loading")
 
 try:
-    import torch
-    st.success(f"PyTorch installed: {torch.__version__}")
-except Exception as e:
-    st.error(f"PyTorch error: {e}")
-
-try:
-    import cv2
-    st.success("OpenCV installed")
-except Exception as e:
-    st.error(f"OpenCV error: {e}")
-
-try:
-    from streamlit_drawable_canvas import st_canvas
-    st.success("Drawable canvas installed")
-except Exception as e:
-    st.error(f"Canvas error: {e}")
-
-try:
-    import os
-    files = os.listdir(".")
-    st.write("Files in directory:", files)
+    st.write("Step 1: Importing inference_module...")
+    from inference_module import DrawPredictor
+    st.success("Module imported successfully!")
     
-    if "quickdraw_mlp.pth" in files:
-        st.success("Model file found!")
-    else:
-        st.error("Model file NOT found")
-        
-    if "class_map.json" in files:
-        st.success("Class map found!")
-    else:
-        st.error("Class map NOT found")
-        
+    st.write("Step 2: Creating predictor...")
+    predictor = DrawPredictor()
+    st.success("Predictor created!")
+    
+    st.write("Step 3: Checking class names...")
+    st.write(f"Number of classes: {len(predictor.class_names)}")
+    st.write(f"Classes: {predictor.class_names}")
+    
+    st.success("✅ Model loaded successfully! App should work now.")
+    
 except Exception as e:
-    st.error(f"File system error: {e}")
+    st.error(f"❌ Error: {str(e)}")
+    import traceback
+    st.code(traceback.format_exc())
