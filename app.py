@@ -126,7 +126,7 @@ if st.session_state.get("active") and st.session_state.get("target"):
 else:
     st.info("Select a target from the sidebar to start playing!")
     
-    with st.expander("View all 33 classes"):
+    with st.expander("View all 8 classes"):
         cols = st.columns(3)
         for i, cls in enumerate(predictor.class_names):
             with cols[i % 3]:
