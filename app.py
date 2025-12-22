@@ -46,7 +46,7 @@ if "canvas_key" not in st.session_state:
 if "last_pred" not in st.session_state:
     st.session_state.last_pred = None
 
-st.title("QuickDraw - AI Sketch Guesser")
+st.title("Live Sketch")
 st.caption("Draw an object and let the AI guess what you're drawing!")
 
 with st.sidebar:
