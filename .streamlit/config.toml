@@ -21,6 +21,3 @@ level = "info"
 
 [browser]
 gatherUsageStats = false
-
-[deprecation]
-showPyplotGlobalUse = false
