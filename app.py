@@ -109,10 +109,15 @@ if st.session_state.get("active") and st.session_state.get("target"):
             except Exception as e:
                 st.error(f"Prediction failed: {str(e)}")
                 preds = []
-            top_label, top_conf = preds[0]
+
+            if preds:
+                top_label, top_conf = preds[0]
+            else:
+                st.info("No predictions available due to a model/scaler mismatch.")
+                top_label, top_conf = None, None
             
             last_pred = st.session_state.get("last_pred")
-            if last_pred != top_label:
+            if top_label is not None and last_pred != top_label:
                 st.session_state.last_pred = top_label
                 st.session_state.attempts = st.session_state.get("attempts", 0) + 1
             
@@ -121,7 +126,7 @@ if st.session_state.get("active") and st.session_state.get("target"):
                 style = "guess-correct" if is_match else ""
                 st.markdown(f"<div class='guess-box {style}'>{label}: {conf*100:.1f}%</div>", unsafe_allow_html=True)
             
-            if top_label == st.session_state.get("target"):
+            if top_label is not None and top_label == st.session_state.get("target"):
                 st.success(f"Correct! It's a {top_label}!")
                 st.session_state.active = False
         else:
