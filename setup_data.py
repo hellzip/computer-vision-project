@@ -4,8 +4,7 @@ import numpy as np
 from PIL import Image
 
 CLASSES = [
-    "apple", "door", "mailbox", "book", "angel", "van", "cat", "dog", "bird", "fish", "elephant", "horse", "car", "bicycle", "airplane", "train",
-    "house", "tree", "flower", "cloud", "sun", "star", "circle", "square", "triangle", "pizza", "cake", "banana", "cup", "chair", "table", "eye", "face"
+    "apple", "door", "mailbox", "book", "angel", "van", "pencil", "hexagon"
 ]
 BASE_URL = "https://storage.googleapis.com/quickdraw_dataset/full/numpy_bitmap/"
 DATA_DIR = "quickdraw_images_dedup"
